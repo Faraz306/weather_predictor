@@ -87,3 +87,4 @@ if predict:
 
         st.subheader(f"Weather Forecast Timeline for {city}, {country}")
         st.dataframe(final_table, use_container_width=True, hide_index=True)
+
