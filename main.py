@@ -4,7 +4,7 @@ import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
 
 # FIX 1: Point to the parent directory where cities.csv actually lives
-country_df = pd.read_csv("../cities.csv")
+country_df = pd.read_csv("cities.csv")
 st.title("Yamaan Faraz YF Weather predictor")
 
 country = st.selectbox("Choose Country", country_df["country"].unique())
@@ -31,7 +31,7 @@ if predict:
 
         # 2. Run the pushdown filter using relative pathing to fix your folder layout
         asli_df = pd.read_parquet(
-            "../daily_weather.parquet",
+            "daily_weather.parquet",
             filters=[("station_id", "==", target_station)]
         )
 
