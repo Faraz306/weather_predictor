@@ -1,5 +1,7 @@
 import datetime
+import io
 import pandas as pd
+import requests
 import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
 
@@ -29,12 +31,34 @@ if predict:
         else:
             target_station = raw_station
 
-        # 1. Format the Google Drive ID into a direct download URL
+        # 1. Direct download URL layout using the correct Google Docs domain
         drive_id = "1M09BTDWoi4J-BrC7bbC76d77Oe9FJsAe"
         gdrive_url = f"https://google.com/{drive_id}"
 
-        # 2. Run the pushdown filter using the formatted web URL
-        asli_df = pd.read_parquet(gdrive_url)
+        # 2. Use requests with a session to bypass security block pages
+        session = requests.Session()
+        response = session.get(gdrive_url, stream=True)
+
+        # If Google shows a confirmation page, grab the confirmation token
+        token = None
+        for key, value in response.cookies.items():
+            if key.startswith('download_warning'):
+                token = value
+
+        if token:
+            gdrive_url = f"https://google.com{token}&id={drive_id}"
+            response = session.get(gdrive_url, stream=True)
+
+        # 3. Load the downloaded raw bytes directly into pandas
+        asli_df = pd.read_parquet(io.BytesIO(response.content))
+
+        # CRITICAL FILTER: Only train on the selected city's station to avoid crashing Streamlit
+        if "station_id" in asli_df.columns:
+            asli_df = asli_df[asli_df["station_id"] == target_station]
+
+        if asli_df.empty:
+            st.error(f"No historical weather records found for station {target_station}.")
+            st.stop()
 
         asli_df["date"] = pd.to_datetime(asli_df["date"])
         asli_df = asli_df.dropna(subset=["date", "avg_temp_c", "precipitation_mm"])
@@ -88,4 +112,3 @@ if predict:
 
         st.subheader(f"Weather Forecast Timeline for {city}, {country}")
         st.dataframe(final_table, use_container_width=True, hide_index=True)
-
