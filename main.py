@@ -29,11 +29,12 @@ if predict:
         else:
             target_station = raw_station
 
-        # 2. Run the pushdown filter using relative pathing to fix your folder layout
-        asli_df = pd.read_parquet(
-            "daily_weather.parquet",
-            filters=[("station_id", "==", target_station)]
-        )
+        # 1. Format the Google Drive ID into a direct download URL
+        drive_id = "1M09BTDWoi4J-BrC7bbC76d77Oe9FJsAe"
+        gdrive_url = f"https://google.com{drive_id}"
+
+        # 2. Run the pushdown filter using the formatted web URL
+        asli_df = pd.read_parquet(gdrive_url)
 
         asli_df["date"] = pd.to_datetime(asli_df["date"])
         asli_df = asli_df.dropna(subset=["date", "avg_temp_c", "precipitation_mm"])
