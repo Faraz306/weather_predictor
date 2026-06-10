@@ -3,8 +3,8 @@ import pandas as pd
 import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
 
-# Cache the lightweight cities file
-country_df = pd.read_csv("cities.csv")
+# FIX 1: Point to the parent directory where cities.csv actually lives
+country_df = pd.read_csv("../cities.csv")
 st.title("Yamaan Faraz YF Weather predictor")
 
 country = st.selectbox("Choose Country", country_df["country"].unique())
@@ -15,12 +15,23 @@ predict = st.button("Predict")
 
 if predict:
     with st.spinner(f"Training Yamaan's AI Model specifically for {city}..."):
-        # OPTIMIZATION 1: Use filters directly while reading parquet to save RAM
-        target_station = filtered_cities.loc[filtered_cities["city_name"] == city, "station_id"].values[0]
 
-        # This reads ONLY the rows for that specific station instead of the entire global file
+        station_array = filtered_cities.loc[filtered_cities["city_name"] == city, "station_id"].values
+
+        if len(station_array) == 0:
+            st.error("Station ID not found for the selected city.")
+            st.stop()
+
+        # FIX 2: Safely handle both numpy types and native Python types without crashing
+        raw_station = station_array[0]
+        if hasattr(raw_station, "item"):
+            target_station = raw_station.item()
+        else:
+            target_station = raw_station
+
+        # 2. Run the pushdown filter using relative pathing to fix your folder layout
         asli_df = pd.read_parquet(
-            "daily_weather.parquet",
+            "../daily_weather.parquet",
             filters=[("station_id", "==", target_station)]
         )
 
