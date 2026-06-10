@@ -31,7 +31,7 @@ if predict:
 
         # 1. Format the Google Drive ID into a direct download URL
         drive_id = "1M09BTDWoi4J-BrC7bbC76d77Oe9FJsAe"
-        gdrive_url = f"https://google.com{drive_id}"
+        gdrive_url = f"https://google.com/{drive_id}"
 
         # 2. Run the pushdown filter using the formatted web URL
         asli_df = pd.read_parquet(gdrive_url)
